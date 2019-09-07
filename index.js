@@ -15,6 +15,29 @@ server.use((req, res, next) => {
 	console.timeEnd("Request time");
 });
 
+const checkIsValidUser = (req, res, next) => {
+	if (!req.body.name) {
+		return res.status(400).json({
+			error: "The property 'name' is required!"
+		});
+	}
+
+	return next();
+};
+
+const checkUserExists = (req, res, next) => {
+	const user = users[req.params.id];
+	if (!user) {
+		return res.status(400).json({
+			error: "The user does not exists!"
+		});
+	}
+
+	req.user = user;
+
+	return next();
+};
+
 server.get("/users", (req, res) => {
 	return res.json(
 		users.map((u, index) => ({
@@ -24,7 +47,7 @@ server.get("/users", (req, res) => {
 	);
 });
 
-server.get("/users/:id", (req, res) => {
+server.get("/users/:id", checkUserExists, (req, res) => {
 	const { id } = req.params;
 	// const { name } = req.query;
 	// return res.json({
@@ -35,11 +58,11 @@ server.get("/users/:id", (req, res) => {
 
 	return res.json({
 		id,
-		name: users[id]
+		name: req.user
 	});
 });
 
-server.post("/users", (req, res) => {
+server.post("/users", checkIsValidUser, (req, res) => {
 	const { name } = req.body;
 	users.push(name);
 	const id = users.length - 1;
@@ -49,7 +72,7 @@ server.post("/users", (req, res) => {
 	});
 });
 
-server.put("/users/:id", (req, res) => {
+server.put("/users/:id", checkUserExists, checkIsValidUser, (req, res) => {
 	const { name } = req.body;
 	const { id } = req.params;
 	users[id] = name;
@@ -59,7 +82,7 @@ server.put("/users/:id", (req, res) => {
 	});
 });
 
-server.delete("/users/:id", (req, res) => {
+server.delete("/users/:id", checkUserExists, (req, res) => {
 	const { id } = req.params;
 	users.splice(id, 1);
 	return res.json({
