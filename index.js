@@ -6,6 +6,15 @@ server.use(express.json());
 
 const users = ["Samuel", "Zamuel", "Samuka"];
 
+server.use((req, res, next) => {
+	console.time("Request time");
+	console.log(`Request type: ${req.method}`);
+	console.log(`URL: ${req.url}`);
+
+	next();
+	console.timeEnd("Request time");
+});
+
 server.get("/users", (req, res) => {
 	return res.json(
 		users.map((u, index) => ({
